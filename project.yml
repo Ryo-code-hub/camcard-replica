@@ -37,12 +37,31 @@ targets:
     dependencies:
       - package: CardCore
         product: CardCore
+  CamCardReplicaTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/AppTests
+    dependencies:
+      - target: CamCardReplica
+      - package: CardCore
+        product: CardCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ryocode.camcardreplica.tests
+        GENERATE_INFOPLIST_FILE: "YES"
 schemes:
   CamCardReplica:
     build:
       targets:
         CamCardReplica: all
+        CamCardReplicaTests: [test]
     run:
       config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - CamCardReplicaTests
     archive:
       config: Release
