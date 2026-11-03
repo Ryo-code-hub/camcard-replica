@@ -1,0 +1,61 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-tests:
+    name: Core unit tests (CardCore)
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Run CardCore tests
+        run: swift test --package-path Core
+
+  simulator-build:
+    name: Build iOS app (Simulator)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show Xcode version
+        run: |
+          xcodebuild -version
+          xcrun simctl list runtimes
+      - name: Install XcodeGen
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+          xcodegen --version
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build app for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project CamCardReplica.xcodeproj \
+            -scheme CamCardReplica \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee build/build.log | tail -n 150
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-build-logs
+          path: build/build.log
+          if-no-files-found: ignore

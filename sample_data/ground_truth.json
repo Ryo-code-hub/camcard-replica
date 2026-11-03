@@ -1,0 +1,68 @@
+[
+  {
+    "id": "card_01_en",
+    "image": "card_01_en.png",
+    "ground_truth": {
+      "name": "David Chen",
+      "company": "ABC University",
+      "jobTitle": "Professor",
+      "mobile": "+86 138 0013 8000",
+      "email": "david@abc.edu",
+      "website": "www.abc.edu"
+    }
+  },
+  {
+    "id": "card_02_zh",
+    "image": "card_02_zh.png",
+    "ground_truth": {
+      "name": "朱宏明",
+      "company": "同济大学",
+      "jobTitle": "教授",
+      "mobile": "13800138000",
+      "email": "zhu@tongji.edu.cn",
+      "address": "上海市杨浦区四平路1239号"
+    }
+  },
+  {
+    "id": "card_03_bi",
+    "image": "card_03_bi.png",
+    "ground_truth": {
+      "name": "Jordan Lee",
+      "company": "Lee Consulting",
+      "jobTitle": "Director",
+      "officePhone": "021-12345678",
+      "mobile": "13900139000",
+      "fax": "021-87654321",
+      "email": "jordan@leeconsulting.com"
+    }
+  },
+  {
+    "id": "card_04_vertical",
+    "image": "card_04_vertical.png",
+    "ground_truth": {
+      "name": "李伟",
+      "company": "华为技术有限公司",
+      "jobTitle": "首席工程师",
+      "mobile": "13700137000",
+      "email": "LiWei@example.com",
+      "address": "深圳市龙岗区坂田街道1号"
+    }
+  },
+  {
+    "id": "card_05_missing",
+    "image": "card_05_missing.png",
+    "ground_truth": {
+      "name": "Alice Wang",
+      "company": "XYZ Technologies",
+      "mobile": "13900139001"
+    }
+  },
+  {
+    "id": "card_06_ambiguous",
+    "image": "card_06_ambiguous.png",
+    "ground_truth": {
+      "mobile": "13800138002",
+      "address": "One Apple Park Way"
+    }
+  }
+]
