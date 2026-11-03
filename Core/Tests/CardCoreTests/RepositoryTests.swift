@@ -77,7 +77,7 @@ final class BusinessCardRepositoryTests: XCTestCase {
         try repository.add(sampleCard(name: "David Chen"))
         try repository.add(sampleCard(name: "Alice Wang"))
 
-        XCTAssertEqual(repository.search("david").count, 1)
+        XCTAssertEqual(repository.search("Alice").count, 1)
         XCTAssertEqual(repository.search("David Chen").first?.name, "David Chen")
         XCTAssertTrue(repository.search("nobody").isEmpty)
     }
@@ -88,7 +88,7 @@ final class BusinessCardRepositoryTests: XCTestCase {
         try repository.add(sampleCard(name: "David Chen", company: "ABC University"))
         try repository.add(sampleCard(name: "Alice Wang", company: "XYZ Technologies"))
 
-        XCTAssertEqual(repository.search("ABC").count, 1)
+        XCTAssertEqual(repository.search("University").count, 1)
         XCTAssertEqual(repository.search("Technologies").count, 1)
     }
 

@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import Combine
 import CardCore
 
 /// 全局状态：名片列表、搜索、标签筛选、错误提示。

@@ -53,7 +53,7 @@ public struct FieldParser {
         // 4. 地址（相邻行合并）
         var addressIndexes: [Int] = []
         for (index, line) in lines.enumerated() where !consumed[index] {
-            if Self.containsAny(line.text, Self.addressKeywords) {
+            if Self.looksLikeAddress(line.text) {
                 addressIndexes.append(index)
             }
         }
@@ -181,12 +181,15 @@ extension FieldParser {
         "信息", "传媒", "咨询", "工作室"
     ]
 
-    private static let addressKeywords: [String] = [
+    private static let addressChineseKeywords: [String] = [
         "省", "市", "区", "县", "镇", "村", "路", "街", "道", "巷", "号", "楼", "层",
-        "室", "栋", "座", "大厦", "广场", "园区", "开发区", "address", "road", "rd",
-        "street", "st.", "avenue", "ave", "floor", "fl.", "room", "rm.", "building",
-        "bldg", "district", "city", "province", "china", "中国", "北京", "上海",
-        "广州", "深圳", "天津", "杭州", "南京", "武汉", "成都", "西安", "重庆", "苏州"
+        "室", "栋", "座", "大厦", "广场", "园区", "开发区",
+        "中国", "北京", "上海", "广州", "深圳", "天津", "杭州", "南京", "武汉", "成都", "西安", "重庆", "苏州"
+    ]
+
+    private static let addressEnglishKeywords: [String] = [
+        "address", "road", "street", "avenue", "floor", "building", "district",
+        "city", "province", "china", "lane", "plaza", "suite", "way"
     ]
 
     private static let mobileKeywords: [String] = ["手机", "mobile", "cell", "移动电话", "mob", "手机号"]
@@ -204,7 +207,7 @@ extension FieldParser {
             let lower = candidate.value.lowercased()
             if containsAny(lower, titleKeywords) { score -= 8 }
             if containsAny(lower, companyStrongKeywords + companyMediumKeywords) { score -= 8 }
-            if containsAny(lower, addressKeywords) { score -= 5 }
+            if looksLikeAddress(line.text) { score -= 5 }
             if line.text.count > 24 { score -= 2 }
             if let current = best {
                 if score > current.score { best = (index, candidate.value, score) }
@@ -285,7 +288,7 @@ extension FieldParser {
             var score = 10
             if index <= 2 { score += 2 }
             if containsAny(line.text, companyStrongKeywords) { score -= 3 }
-            if containsAny(line.text, addressKeywords) { score -= 4 }
+            if looksLikeAddress(line.text) { score -= 4 }
             if line.text.count > 30 { score -= 1 }
             let text = stripLabel(line.text, labels: ["职位", "职务", "Title", "Position", "Job Title"])
             if let current = best {
@@ -306,7 +309,7 @@ extension FieldParser {
             if containsAny(line.text, companyMediumKeywords) { score += 6 }
             guard score > 0 else { continue }
             if containsAny(line.text, titleKeywords) { score -= 6 }
-            if containsAny(line.text, addressKeywords) { score -= 3 }
+            if looksLikeAddress(line.text) { score -= 3 }
             if let nameIndex, index > nameIndex { score += 1 }
             if line.text.count > 40 { score -= 2 }
             let text = stripLabel(line.text, labels: ["公司", "单位", "Company", "Organization", "Org"])
@@ -417,6 +420,13 @@ extension FieldParser {
             }
         }
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func looksLikeAddress(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        if addressChineseKeywords.contains(where: { lower.contains($0) }) { return true }
+        let words = lower.split(whereSeparator: { !$0.isLetter }).map(String.init)
+        return addressEnglishKeywords.contains(where: { words.contains($0) })
     }
 
     private static func unique(_ values: [String]) -> [String] {

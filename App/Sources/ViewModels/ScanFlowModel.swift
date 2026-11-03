@@ -1,4 +1,5 @@
 import UIKit
+import Combine
 import CardCore
 
 /// 扫描流程状态机：capture → processing(detect/correct/OCR/parse) → review → save
