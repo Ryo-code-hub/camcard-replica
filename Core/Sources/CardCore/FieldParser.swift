@@ -7,12 +7,16 @@ public struct FieldParser {
     // MARK: - 公开入口
 
     public func parse(_ blocks: [OCRTextBlock]) -> ParsedFields {
-        let lines = blocks
-            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .map { Line(text: $0.text.trimmingCharacters(in: .whitespacesAndNewlines),
-                        midY: $0.boundingBox.midY,
-                        x: $0.boundingBox.x) }
-            .sorted { lhs, rhs in lhs.midY == rhs.midY ? lhs.x < rhs.x : lhs.midY > rhs.midY }
+        var lines: [Line] = []
+        for block in blocks {
+            let trimmed = block.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            lines.append(Line(text: trimmed, midY: block.boundingBox.midY, x: block.boundingBox.x))
+        }
+        lines.sort { lhs, rhs in
+            if lhs.midY == rhs.midY { return lhs.x < rhs.x }
+            return lhs.midY > rhs.midY
+        }
 
         var fields = ParsedFields()
         var consumed = [Bool](repeating: false, count: lines.count)
@@ -62,9 +66,16 @@ public struct FieldParser {
                     groups.append([idx])
                 }
             }
-            let bestGroup = groups.max { lhs, rhs in
-                lhs.reduce(0) { $0 + lines[$1].text.count } < rhs.reduce(0) { $0 + lines[$1].text.count }
-            } ?? []
+            var bestGroup: [Int] = []
+            var bestGroupLength = -1
+            for group in groups {
+                var length = 0
+                for index in group { length += lines[index].text.count }
+                if length > bestGroupLength {
+                    bestGroupLength = length
+                    bestGroup = group
+                }
+            }
             let addressText = bestGroup
                 .map { Self.stripLabel(lines[$0].text, labels: ["地址", "Address", "Addr", "Add"]) }
                 .filter { !$0.isEmpty }
@@ -190,7 +201,7 @@ extension FieldParser {
             guard let candidate = nameCandidate(line.text) else { continue }
             var score = candidate.baseScore
             if index == 0 { score += 3 } else if index == 1 { score += 2 } else if index == 2 { score += 1 }
-            let lower = line.text.lowercased()
+            let lower = candidate.value.lowercased()
             if containsAny(lower, titleKeywords) { score -= 8 }
             if containsAny(lower, companyStrongKeywords + companyMediumKeywords) { score -= 8 }
             if containsAny(lower, addressKeywords) { score -= 5 }
@@ -268,6 +279,8 @@ extension FieldParser {
     private static func findJobTitle(lines: [Line], consumed: [Bool]) -> (index: Int, text: String)? {
         var best: (index: Int, text: String, score: Int)?
         for (index, line) in lines.enumerated() where !consumed[index] {
+            // 姓名行（如 "Dr. David Chen"）不能被当成职位行
+            if nameCandidate(line.text) != nil { continue }
             guard containsAny(line.text, titleKeywords) else { continue }
             var score = 10
             if index <= 2 { score += 2 }

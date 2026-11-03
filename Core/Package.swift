@@ -12,6 +12,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "CardCore"),
-        .testTarget(name: "CardCoreTests", dependencies: ["CardCore"])
+        .testTarget(name: "CardCoreTests", dependencies: ["CardCore"]),
+        .executableTarget(name: "OCREval", dependencies: ["CardCore"], path: "Sources/OCREval")
     ]
 )

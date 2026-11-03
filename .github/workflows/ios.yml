@@ -43,19 +43,32 @@ jobs:
       - name: Build app for iOS Simulator
         run: |
           set -o pipefail
-          xcodebuild \
-            -project CamCardReplica.xcodeproj \
-            -scheme CamCardReplica \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            build 2>&1 | tee build/build.log | tail -n 150
+          mkdir -p build
+          xcodebuild -project CamCardReplica.xcodeproj -scheme CamCardReplica -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build/build.log
       - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: simulator-build-logs
           path: build/build.log
+          if-no-files-found: ignore
+
+  ocr-eval:
+    name: OCR accuracy evaluation (Vision + FieldParser)
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run OCR evaluation on synthetic card set
+        run: |
+          swift run --package-path Core OCREval sample_data artifacts/ocr_eval.json
+      - name: Publish summary
+        run: |
+          cat artifacts/ocr_eval.md >> $GITHUB_STEP_SUMMARY
+          cat artifacts/ocr_eval.md
+      - name: Upload OCR evaluation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocr-eval
+          path: artifacts/
           if-no-files-found: ignore
