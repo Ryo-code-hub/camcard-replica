@@ -226,6 +226,7 @@ extension FieldParser {
         let labelWords = ["姓名", "名字", "name", "电话", "手机", "邮箱", "地址", "公司", "职位", "网址",
                           "title", "company", "email", "tel", "mobile", "fax", "address", "website"]
         if containsAny(lower, labelWords) { return nil }
+        if titleKeywords.contains(where: { $0.lowercased() == lower }) { return nil }
         if text.contains("@") { return nil }
         if text.contains(where: { $0.isNumber }) { return nil }
         if isCJKName(text) { return NameCandidate(value: text, baseScore: 6) }
@@ -282,8 +283,12 @@ extension FieldParser {
     private static func findJobTitle(lines: [Line], consumed: [Bool]) -> (index: Int, text: String)? {
         var best: (index: Int, text: String, score: Int)?
         for (index, line) in lines.enumerated() where !consumed[index] {
-            // 姓名行（如 "Dr. David Chen"）不能被当成职位行
-            if nameCandidate(line.text) != nil { continue }
+            // 姓名行（如 "Dr. David Chen"）不能被当成职位行；
+            // 但中文职称本身可能被误判成两字姓名（如 "教授"），此时仍按职位处理。
+            if let candidate = nameCandidate(line.text),
+               !titleKeywords.contains(where: { $0.lowercased() == candidate.value.lowercased() }) {
+                continue
+            }
             guard containsAny(line.text, titleKeywords) else { continue }
             var score = 10
             if index <= 2 { score += 2 }
