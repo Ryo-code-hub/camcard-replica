@@ -59,6 +59,10 @@ struct ScanFlowView: View {
         switch model.phase {
         case .capture:
             captureView
+        case .detecting:
+            processingView("检测名片区域…")
+        case .cropping:
+            CropEditorView(model: model)
         case .processing(let message):
             processingView(message)
         case .review:
@@ -182,6 +186,8 @@ struct ScanFlowView: View {
     private var navigationTitle: String {
         switch model.phase {
         case .capture: return "扫描名片"
+        case .detecting: return "检测名片区域"
+        case .cropping: return "调整名片区域"
         case .processing: return "识别中"
         case .review: return "确认信息"
         case .failed: return "识别失败"
